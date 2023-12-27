@@ -13,8 +13,9 @@ library(nortest)
 data("CASchools", package = "AER")
 
 #description of the data
+numerical_vars <- CASchools[sapply(CASchools, is.numeric)]
+
 summary(CASchools)
-cor(CASchools)
 describe(CASchools)
 
 #barplots
@@ -42,13 +43,13 @@ for (col in names(CASchools)) {
 }
 
 #correlation
-numerical_vars <- CASchools[sapply(CASchools, is.numeric)]
 cor_matrix <- cor(numerical_vars)
 ggplot(melt(cor_matrix), aes(Var1, Var2, fill = value)) +
   geom_tile() +
   scale_fill_gradient(low = "blue", high = "red") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+print(cor_matrix[, "read"])
 
 #scatterplots
 pairs(numerical_vars)
@@ -68,7 +69,22 @@ for (col in names(numerical_vars)) {
 }
 
 
+#ftting the model
+# Fit a linear model using stepwise regression
+# Forward selection
+forward_model <- step(lm(read ~ 1, data = CASchools),
+                      scope = list(lower = ~1, upper = ~.))
 
+# Fit models with different variable combinations
+model1 <- lm(read ~ expenditure, data = CASchools)
+model2 <- lm(read ~ income, data = CASchools)
+# ...
+
+# Compare models using AIC
+AIC_values <- AIC(model1, model2)
+print(AIC_values)
+
+#model fitting and preditcions
 model <- lm(read ~ ., data = CASchools)
 summary(model)
 
