@@ -109,18 +109,50 @@ anova(model1,model2)
 anova(model1,model3)
 anova(model3,model4)
 
-numerical_model = model3
+model5 <- lm(read ~ lunch+income+english+expenditure+county, data = df)
+model6 <- lm(read ~ lunch+income+english+expenditure+county+grades, data = df)
 
-# Compare models using AIC
-AIC_values <- AIC(model1,model2)
-print(AIC_values)
+summary(model5)
+anova(model3,model5)
+anova(model5,model6)
 
-summary(model8)
+final_model = model5
 
-#model fitting and preditcions
-model <- lm(read ~ ., data = df)
-AIC(model)
-summary(model)
+#varaibles X1 and X2
+#X1 = lunch X2 = county
 
-predictions <- predict(model, newdata = df)
-plot(predictions, df$read, xlab = "Predicted Read", ylab = "Observed Read")
+modelx1 <- lm(read ~lunch, data = df)
+modelx2 <- lm(read ~ county, data = df)
+
+coef(final_model)['lunch']
+coef(modelx1)['lunch']
+
+coef(final_model)['countyButte']
+coef(modelx2)['countyButte']
+coef(final_model)['countyCalaveras']
+coef(modelx2)['countyCalaveras']
+coef(final_model)['countyContra Costa']
+coef(modelx2)['countyContra Costa']
+coef(final_model)['countyEl Dorado']
+coef(modelx2)['countyEl Dorado']
+
+#x2 3 = calaveras x2 2 = butte
+
+coefButte <- coef(final_model)['countyButte']
+coefCalaveras <- coef(final_model)['countyCalaveras']
+coefButte
+coefCalaveras
+
+coefCalaveras -coefButte
+
+confint(final_model, level = 0.95)["countyCalaveras",] - confint(final_model, level = 0.95)["countyButte",]
+confint(final_model, level = 0.90)["countyCalaveras",] - confint(final_model, level = 0.90)["countyButte",]
+
+#interaction
+
+model_interaction <- lm(read ~ lunch * county, data = df)
+summary(model_interaction)
+
+model_no_interaction <- lm(read ~ lunch + county, data = df)
+
+anova(model_no_interaction,model_interaction)
