@@ -9,10 +9,13 @@ library(reshape2)
 install.packages("nortest")
 library(nortest)
 
+
+
 #load_data
 data("CASchools", package = "AER")
 df <- subset(CASchools,select= -school)
 df <- subset(df,select= -math)
+
 
 #description of the data
 numerical_vars <- df[sapply(df, is.numeric)]
@@ -20,13 +23,14 @@ numerical_vars <- df[sapply(df, is.numeric)]
 #dependent varaible
 summary(df)
 describe(df)
+
 mean(df$read)
 sd(df$read)
 min(df$read)
 max(df$read)
 summary(df$read)
 
-#independent varaibles
+#independent variables
 means <- colMeans(numerical_vars)
 std_dev <- apply(numerical_vars, 2, sd)
 minimum <- apply(numerical_vars, 2, min)
@@ -77,11 +81,8 @@ print(cor_matrix[,])
 #scatterplots
 pairs(numerical_vars)
 
-#pca analysis
-pca_result <- prcomp(numerical_vars, scale. = TRUE)
-summary(pca_result)
 
-#normality
+#normality remove?
 for (col in names(numerical_vars)) {
   print(paste("Shapiro-Wilk test for", col, ":"))
   print(shapiro.test(numerical_vars[[col]]))
@@ -92,20 +93,26 @@ for (col in names(numerical_vars)) {
 }
 
 
+
 #chossing the model
 # Fit models with different variable combinations
-model1 <- lm(read ~ lunch, data = df)
-model2 <- lm(read ~ income, data = df)
-model3 <- lm(read ~ english, data = df)
-model4 <- lm(read ~ calworks, data = df)
-model5 <- lm(read ~ lunch+income, data = df)
-model6 <- lm(read ~ lunch+english, data = df)
-model7 <- lm(read ~ lunch+calworks, data = df)
-model8 <- lm(read ~ students+teachers+calworks+lunch+computer+expenditure+income+english+read, data = df)
-# ...
+model1 <- lm(read ~ lunch+income+english, data = df)
+model2 <- lm(read ~ lunch+income+english+calworks, data = df)
+model3 <- lm(read ~ lunch+income+english+expenditure, data = df)
+model4 <- lm(read ~ lunch+income+english+expenditure+students, data = df)
+
+summary(model1)
+summary(model2)
+summary(model3)
+summary(model4)
+anova(model1,model2)
+anova(model1,model3)
+anova(model3,model4)
+
+numerical_model = model3
 
 # Compare models using AIC
-AIC_values <- AIC(model1, model2,model3,model4,model5,model6,model7,model8)
+AIC_values <- AIC(model1,model2)
 print(AIC_values)
 
 summary(model8)
