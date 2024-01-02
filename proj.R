@@ -8,7 +8,9 @@ install.packages("reshape2")
 library(reshape2)
 install.packages("nortest")
 library(nortest)
-
+library(dplyr)
+install.packages("lmtest")
+library(lmtest)
 
 
 #load_data
@@ -20,7 +22,7 @@ df <- subset(df,select= -math)
 #description of the data
 numerical_vars <- df[sapply(df, is.numeric)]
 
-#dependent varaible
+#dependent variable
 summary(df)
 describe(df)
 
@@ -156,3 +158,80 @@ summary(model_interaction)
 model_no_interaction <- lm(read ~ lunch + county, data = df)
 
 anova(model_no_interaction,model_interaction)
+
+
+
+#logistic regression part
+#change to categorical value
+median(df$read)
+df <- df %>%
+  mutate(read_cat = ifelse(read >= median(read), 1, 0))
+
+#data analysis
+
+#model
+model1 <- glm(read_cat ~ lunch+income+english, data = df, family = "binomial")
+model2 <- glm(read_cat ~ lunch+income+english+calworks, data = df, family = "binomial")
+model3 <- glm(read_cat ~ lunch+income+english+expenditure, data = df, family = "binomial")
+model4 <- glm(read_cat ~ lunch+income+english+expenditure+students, data = df, family = "binomial")
+
+summary(model1)
+summary(model2)
+summary(model3)
+summary(model4)
+anova(model1,model2, test = "Chisq")
+anova(model1,model3, test = "Chisq")
+anova(model3,model4, test = "Chisq")
+
+model5 <- glm(read_cat ~ lunch+income+english+expenditure+county, data = df)
+model6 <- glm(read_cat ~ lunch+income+english+expenditure+county+grades, data = df)
+
+summary(model5)
+anova(model3,model5, test = "Chisq")
+anova(model5,model6, test = "Chisq")
+
+final_model = model5
+
+predictions <- predict(final_model, newdata = df, type = "response")
+predicted_labels <- ifelse(predictions > 0.5, 1, 0)
+confusion_matrix <- table(predicted_labels, df$read_cat)
+accuracy <- sum(diag(confusion_matrix)) / sum(confusion_matrix)
+print(paste("Accuracy:", accuracy))
+confusion_matrix
+
+
+#analyse variables
+modelx1 <- glm(read_cat ~lunch, data = df, family = "binomial")
+modelx2 <- glm(read_cat ~ county, data = df, family = "binomial")
+
+coef(final_model)['lunch']
+coef(modelx1)['lunch']
+
+coef(final_model)['countyButte']
+coef(modelx2)['countyButte']
+coef(final_model)['countyCalaveras']
+coef(modelx2)['countyCalaveras']
+coef(final_model)['countyContra Costa']
+coef(modelx2)['countyContra Costa']
+coef(final_model)['countyEl Dorado']
+coef(modelx2)['countyEl Dorado']
+
+#x2 3 = calaveras x2 2 = butte
+
+coefButte <- coef(final_model)['countyButte']
+coefCalaveras <- coef(final_model)['countyCalaveras']
+coefButte
+coefCalaveras
+
+coefCalaveras -coefButte
+
+confint(final_model, level = 0.95)["countyCalaveras",] - confint(final_model, level = 0.95)["countyButte",]
+confint(final_model, level = 0.90)["countyCalaveras",] - confint(final_model, level = 0.90)["countyButte",]
+
+#interaction
+model_interaction <- glm(read_cat ~ lunch * county, data = df, family = "binomial", maxit = 1000)
+summary(model_interaction)
+
+model_no_interaction <- glm(read_cat ~ lunch + county, data = df, family = "binomial")
+
+anova(model_no_interaction,model_interaction, test = "Chisq")
