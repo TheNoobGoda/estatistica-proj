@@ -11,7 +11,8 @@ library(nortest)
 library(dplyr)
 install.packages("lmtest")
 library(lmtest)
-
+install.packages('glmnet')
+library(glmnet)
 
 #load_data
 data("CASchools", package = "AER")
@@ -162,7 +163,7 @@ anova(model_no_interaction,model_interaction)
 
 
 #logistic regression part
-#change to categorical value
+#change to binary value
 median(df$read)
 df <- df %>%
   mutate(read_cat = ifelse(read >= median(read), 1, 0))
@@ -173,7 +174,7 @@ df <- df %>%
 model1 <- glm(read_cat ~ lunch+income+english, data = df, family = "binomial")
 model2 <- glm(read_cat ~ lunch+income+english+calworks, data = df, family = "binomial")
 model3 <- glm(read_cat ~ lunch+income+english+expenditure, data = df, family = "binomial")
-model4 <- glm(read_cat ~ lunch+income+english+expenditure+students, data = df, family = "binomial")
+model4 <- glm(read_cat ~ lunch+income+english+students, data = df, family = "binomial")
 
 summary(model1)
 summary(model2)
@@ -181,13 +182,13 @@ summary(model3)
 summary(model4)
 anova(model1,model2, test = "Chisq")
 anova(model1,model3, test = "Chisq")
-anova(model3,model4, test = "Chisq")
+anova(model1,model4, test = "Chisq")
 
-model5 <- glm(read_cat ~ lunch+income+english+expenditure+county, data = df)
-model6 <- glm(read_cat ~ lunch+income+english+expenditure+county+grades, data = df)
+model5 <- glm(read_cat ~ lunch+income+english+county, data = df)
+model6 <- glm(read_cat ~ lunch+income+english+county+grades, data = df)
 
 summary(model5)
-anova(model3,model5, test = "Chisq")
+anova(model1,model5, test = "Chisq")
 anova(model5,model6, test = "Chisq")
 
 final_model = model5
@@ -207,14 +208,36 @@ modelx2 <- glm(read_cat ~ county, data = df, family = "binomial")
 coef(final_model)['lunch']
 coef(modelx1)['lunch']
 
+exp(coef(final_model)['lunch'])
+exp(coef(modelx1)['lunch'])
+
+
 coef(final_model)['countyButte']
 coef(modelx2)['countyButte']
+
+exp(coef(final_model)['countyButte'])
+exp(coef(modelx2)['countyButte'])
+
+
 coef(final_model)['countyCalaveras']
 coef(modelx2)['countyCalaveras']
+
+exp(coef(final_model)['countyCalaveras'])
+exp(coef(modelx2)['countyCalaveras'])
+
+
 coef(final_model)['countyContra Costa']
 coef(modelx2)['countyContra Costa']
+
+exp(coef(final_model)['countyContra Costa'])
+exp(coef(modelx2)['countyContra Costa'])
+
+
 coef(final_model)['countyEl Dorado']
 coef(modelx2)['countyEl Dorado']
+
+exp(coef(final_model)['countyEl Dorado'])
+exp(coef(modelx2)['countyEl Dorado'])
 
 #x2 3 = calaveras x2 2 = butte
 
@@ -224,14 +247,14 @@ coefButte
 coefCalaveras
 
 coefCalaveras -coefButte
+or_ceof_diff <- exp(coefCalaveras -coefButte)
 
 confint(final_model, level = 0.95)["countyCalaveras",] - confint(final_model, level = 0.95)["countyButte",]
 confint(final_model, level = 0.90)["countyCalaveras",] - confint(final_model, level = 0.90)["countyButte",]
 
+
 #interaction
-model_interaction <- glm(read_cat ~ lunch * county, data = df, family = "binomial", maxit = 1000)
+df$county_numeric <- as.numeric(df$county)
+model_interaction <- glm(read_cat ~ lunch + county_numeric + lunch * county_numeric, data = df, family = "binomial",maxit = 1000)
 summary(model_interaction)
 
-model_no_interaction <- glm(read_cat ~ lunch + county, data = df, family = "binomial")
-
-anova(model_no_interaction,model_interaction, test = "Chisq")
