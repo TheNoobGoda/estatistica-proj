@@ -13,11 +13,15 @@ install.packages("lmtest")
 library(lmtest)
 install.packages('glmnet')
 library(glmnet)
+install.packages('gridExtra')
+library(gridExtra)
 
 #load_data
 data("CASchools", package = "AER")
 df <- subset(CASchools,select= -school)
 df <- subset(df,select= -math)
+df <- subset(df,select= -district)
+
 
 
 #description of the data
@@ -57,7 +61,7 @@ for (col in names(numerical_vars)) {
 }
 
 #histograms
-par(mfrow = c(1, 1))  # Adjust the layout as needed
+par(mfrow = c(2, 4))  # Adjust the layout as needed
 for (col in names(numerical_vars)) {
   if (is.numeric(numerical_vars[[col]])) {
     hist(numerical_vars[[col]], main = col, xlab = col)
@@ -71,6 +75,17 @@ for (col in names(numerical_vars)) {
     boxplot(numerical_vars[[col]], main = col, xlab = col)
   }
 }
+
+plot1 <- ggplot(df, aes(x = county, y = read)) +
+  geom_boxplot() +
+  stat_summary(fun = "median", geom = "point", shape = 18, size = 3, color = "red") +
+  labs(title = "Boxplot with Median Values by Category", x = "county", y = "read")
+plot2 <- ggplot(df, aes(x = grades, y = read)) +
+  geom_boxplot() +
+  stat_summary(fun = "median", geom = "point", shape = 18, size = 3, color = "red") +
+  labs(title = "Boxplot with Median Values by Category", x = "grades", y = "read")
+
+grid.arrange(plot1, plot2, nrow = 2)
 
 #correlation
 cor_matrix <- cor(numerical_vars)
